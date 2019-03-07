@@ -1,116 +1,200 @@
 #!/usr/bin/python
+import Tkinter
 from Tkinter import *
 import os
+import cv2
+import PIL.Image, PIL.ImageTk
+import time
+
+class App:
+
+    def __init__(self, master, video_source=0):
+        self.master = master
+        self.video_source = video_source
+
+        #################
+        #Frame Main Menu
+        MainM = Frame(master, bd = "5px", relief="raised",width= "200px", height= "250px")
+        M1 = LabelFrame(MainM,text="Main Menu")
+        M1.pack(fill="both",expand="yes")
+        MainM.pack_propagate(0)
+        MainM.place(anchor="nw")
+
+        # Buttons in Main Menu
+        AddM = Button(M1, text = "Add Marker", command = self.MarkerAdd)
+        AddM.grid(row=1,column=1,padx=(20,20))
+
+        EditM = Button(M1, text = "Edit Marker", command = self.MarkerEd)
+        EditM.grid(row=1,column=2,padx=(20,20),pady=(12,12))
+
+        StartRec = Button(M1, text = "Start Record", command = self.StartRec)
+        StartRec.grid(row=2,column=1,padx=(20,20),pady=(12,12))
+
+        StopRec =Button(M1 , text = "Stop Record", command = self.StopRec)
+        StopRec.grid(row=2,column=2,padx=(20,20),pady=(12,12))
+
+        ShowMark =Button(M1 , text = "Show Markers", command = self.ShowMar)
+        ShowMark.grid(row=3,column=1,padx=(20,20),pady=(12,12))
+
+        tex = Text(M1, height=5, width=25)
+        tex.grid(row=4, column=1, columnspan=20, padx=(20,20),pady=(5,5))
+
+        CamProp = Button(M1 , text = "Adjust Camera Properties", command = self.CameraAdjust)
+        CamProp.grid(row=5,column=1,columnspan=2, padx=(20,20),pady=(10,5))
 
 
-gboard=Tk()
-gboard.title("Gesture Board Controls")
-gboard.geometry("800x600")
-gboard.resizable(0,0)
+        ###############################
+        #Apps Menu
+        AppsM = Frame(gboard, bd = "5px", relief="raised",width= "200px", height= "200px")
+        M2 = LabelFrame(AppsM,text="Apps")
+        M2.pack(fill="both",expand="yes")
+        AppsM.pack_propagate(0)
+        AppsM.place(x=0,y=330)
 
-def MarkerAdd():
-    os.system('python AddMarker.py')
+        #Buttons in Apps
+        Test = Button(M2, text = "Test", command = self.Testmark, width=10, height=2)
+        Test.grid(row=6,column=1,padx=(20,20),pady=(20,20))
 
-def MarkerEd():
-    os.system('python EdMarker.py')
+        Draw = Button(M2, text = "Draw", command = self.Draw, width=10, height=2)
+        Draw.grid(row=6,column=2,padx=(20,20),pady=(20,20))
 
-def StartRec():
-    os.system('python StartRec.py')
+        Marker1 = Button(M2, text = "Edit Marker 1", command = self.EditMark1, height=2)
+        Marker1.grid(row=7,column=1,padx=(20,20),pady=(20,20))
 
-def StopRec():
-    os.system('python StopRec.py')
+        Marker2 = Button(M2, text = "Edit Marker 2", command = self.EditMark2, height=2)
+        Marker2.grid(row=7,column=2,padx=(20,20),pady=(20,20))
 
-def ShowMar():
-    os.system('python ShowMar.py')
+        Marker3 = Button(M2, text = "Edit Marker 3", command = self.EditMark3, height=2)
+        Marker3.grid(row=8,column=1,padx=(20,20),pady=(20,20))
 
-def CameraAdjust():
-    os.system('python CameraAdjust.py')
+        Marker4 = Button(M2, text = "Edit Marker 4", command = self.EditMark4, height=2)
+        Marker4.grid(row=8,column=2,padx=(20,20),pady=(20,20))
 
-def Testmark():
-    os.system('python Testmark.py')
+        ########################################
+        #Camera frame
+        self.CamF = Frame(gboard, bd = "5px", relief="raised",width= "390px", height= "450px")
+        M3 = LabelFrame(self.CamF,text="Camera Feed")
+        M3.pack(fill="both",expand=True, anchor=E)
+        self.CamF.pack_propagate(0)
+        self.CamF.place(x=280,y=0)
 
-def Draw():
-    os.system('python Draw.py')
+        # open video source (by default this will try to open the computer webcam)
+        self.vid = CaptureVideo(self.video_source)
 
-def EditMark1():
-    os.system('python EditMark1.py')
+        # Create a canvas that can fit the above video source size
+        self.canvas = Tkinter.Canvas(self.CamF, width = self.vid.width, height = self.vid.height)
+        self.canvas.pack()
 
-def EditMark2():
+        # Button that lets the user take a snapshot
+        # self.btn_snapshot=Tkinter.Button(master, text="Snapshot", width=50, command=self.takeSnapshot)
+        # self.btn_snapshot.pack(anchor=Tkinter.CENTER, expand=True)
+        self.btn_snapshot =Button(M1 , text = "Take Snapshot", command = self.takeSnapshot)
+        self.btn_snapshot.grid(row=3,column=2,padx=(20,20),pady=(12,12))
+
+        # After it is called once, the update method will be automatically called every delay milliseconds
+        self.delay = 15
+        self.update()
+
+    def takeSnapshot(self):
+       # Get a frame from the video source
+       ret, frame = self.vid.get_frame()
+
+       # Saves the snapshot into snapshots folder in current directory
+       if ret:
+           path = "./snapshots/"
+           img_filename = "frame-" + time.strftime("%d-%m-%Y@%H:%M:%S") + ".jpg"
+           cv2.imwrite(os.path.join(path,img_filename), cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+
+    def update(self):
+       # Get a frame from the video source
+       ret, frame = self.vid.get_frame()
+
+       if ret:
+           self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
+           self.canvas.create_image(0, 0, image = self.photo, anchor = Tkinter.NW)
+
+       self.CamF.after(self.delay, self.update)
+
+    def MarkerAdd():
+        os.system('python AddMarker.py')
+
+    def MarkerEd():
+        os.system('python EdMarker.py')
+
+    def StartRec():
+        os.system('python StartRec.py')
+
+    def StopRec():
+        os.system('python StopRec.py')
+
+    def ShowMar():
+        os.system('python ShowMar.py')
+
+    def CameraAdjust():
+        os.system('python CameraAdjust.py')
+
+    def Testmark():
+        os.system('python Testmark.py')
+
+    def Draw():
+        os.system('python Draw.py')
+
+    def EditMark1():
+        os.system('python EditMark1.py')
+
+    def EditMark2():
         os.system('python EditMark2.py')
 
-def EditMark3():
-    os.system('python EditMark3.py')
+    def EditMark3():
+        os.system('python EditMark3.py')
 
-def EditMark4():
-    os.system('python EditMark4.py')
+    def EditMark4():
+        os.system('python EditMark4.py')
 
-#################
-#Frame Main Menu
-MainM = Frame(gboard, bd = "5px", relief="raised",width= "200px", height= "250px")
-M1 = LabelFrame(MainM,text="Main Menu")
-M1.pack(fill="both",expand="yes")
-MainM.pack_propagate(0)
-MainM.place(anchor="nw")
 
-# Buttons in Main Menu
-AddM = Button(M1, text = "Add Marker", command = MarkerAdd)
-AddM.grid(row=1,column=1,padx=(20,20))
+class CaptureVideo:
+    def __init__(self, video_source=0):
+    # Open the video source
+        self.vid = cv2.VideoCapture(video_source)
+        if not self.vid.isOpened():
+            raise ValueError("Unable to open video source", video_source)
 
-EditM = Button(M1, text = "Edit Marker", command = MarkerEd)
-EditM.grid(row=1,column=2,padx=(20,20),pady=(12,12))
+        # Get video source width and height
+        self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
-StartRec = Button(M1, text = "Start Record", command = StartRec)
-StartRec.grid(row=2,column=1,padx=(20,20),pady=(12,12))
+    def get_frame(self):
+        if self.vid.isOpened():
+            ret, frame = self.vid.read()
+            if ret:
+                # Return a boolean success flag and the current frame converted to BGR
+                return (ret, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            else:
+                return (ret, None)
+        else:
+            return (ret, None)
 
-StopRec =Button(M1 , text = "Stop Record", command = StopRec)
-StopRec.grid(row=2,column=2,padx=(20,20),pady=(12,12))
+    # Release the video source when the object is destroyed
+    def __del__(self):
+        if self.vid.isOpened():
+            self.vid.release()
 
-ShowMark =Button(M1 , text = "Show Markers", command = ShowMar)
-ShowMark.grid(row=3,column=1,padx=(20,20),pady=(12,12))
+gboard=Tk()
 
-tex = Text(M1, height=5, width=25)
-tex.grid(row=4, column=1, columnspan=20, padx=(20,20),pady=(5,5))
+gboard.title("Gesture Board Controls")
+gboard.geometry("1000x600")
+gboard.resizable(0,0)
 
-CamProp = Button(M1 , text = "Adjust Camera Properties", command = CameraAdjust)
-CamProp.grid(row=5,column=1,columnspan=2, padx=(20,20),pady=(10,5))
-
-###############################
-#Apps Menu
-AppsM = Frame(gboard, bd = "5px", relief="raised",width= "200px", height= "200px")
-M2 = LabelFrame(AppsM,text="Apps")
-M2.pack(fill="both",expand="yes")
-AppsM.pack_propagate(0)
-AppsM.place(x=0,y=330)
-
-#Buttons in Apps
-Test = Button(M2, text = "Test", command = Testmark, width=10, height=2)
-Test.grid(row=6,column=1,padx=(20,20),pady=(20,20))
-
-Draw = Button(M2, text = "Draw", command = Draw, width=10, height=2)
-Draw.grid(row=6,column=2,padx=(20,20),pady=(20,20))
-
-Marker1 = Button(M2, text = "Edit Marker 1", command = EditMark1, height=2)
-Marker1.grid(row=7,column=1,padx=(20,20),pady=(20,20))
-
-Marker2 = Button(M2, text = "Edit Marker 2", command = EditMark2, height=2)
-Marker2.grid(row=7,column=2,padx=(20,20),pady=(20,20))
-
-Marker3 = Button(M2, text = "Edit Marker 3", command = EditMark3, height=2)
-Marker3.grid(row=8,column=1,padx=(20,20),pady=(20,20))
-
-Marker4 = Button(M2, text = "Edit Marker 4", command = EditMark4, height=2)
-Marker4.grid(row=8,column=2,padx=(20,20),pady=(20,20))
-
-########################################
-#Camera frame
-CamF = Frame(gboard, bd = "5px", relief="raised",width= "390px", height= "450px")
-M3 = LabelFrame(CamF,text="Camera Feed")
-M3.pack(fill="both",expand=True, anchor=E)
-CamF.pack_propagate(0)
-CamF.place(x=280,y=0)
-
+app = App(gboard)
 
 gboard.mainloop()
+
+
+
+
+
+
+
 
 
 # SixthSense = Tk()
