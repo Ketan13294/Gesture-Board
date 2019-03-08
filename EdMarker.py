@@ -18,10 +18,10 @@ class EdMarker:
         M3 = LabelFrame(master,text="Edit Marker 3")
         M3.grid(row=0, column=2, padx=(20,20))
         M4 = LabelFrame(master,text="Edit Marker 4")
-        M4.grid(row=0, column=3, padx=(20,20))
+        M4.grid(row=0, column=3)
 
         M5 = LabelFrame(master,text = "Snapshot")
-        M5.grid(row=1, columnspan=10, padx=(70,20))
+        M5.grid(row=1, columnspan=10, padx=(20,20))
 
 
         ## Buttons Edit Marker ##
@@ -77,7 +77,7 @@ Edmark=Tk()
 edMarker = EdMarker(Edmark)
 
 Edmark.title("Edit Markers")
-Edmark.geometry("800x800")
+Edmark.geometry("700x650")
 Edmark.resizable(0,0)
 
 Edmark.mainloop()
