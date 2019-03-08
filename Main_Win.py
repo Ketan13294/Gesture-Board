@@ -14,7 +14,7 @@ class App:
 
         #################
         #Frame Main Menu
-        MainM = Frame(master, bd = "1px",width= "200px", height= "240px")
+        MainM = Frame(master, bd = "1px",width= "240px", height= "240px")
         M1 = LabelFrame(MainM,text="Main Menu")
         # , width= "800px", height= "200px"
         # MainM.grid(row=0, column=0, columnspan=2)
@@ -38,8 +38,8 @@ class App:
         ShowMark =Button(M1 , text = "Show Markers", command = self.ShowMar)
         ShowMark.grid(row=3,column=1,padx=(20,20),pady=(12,12))
 
-        tex = Text(M1, height=5, width=25)
-        tex.grid(row=4, column=1, columnspan=20, padx=(20,20),pady=(5,5))
+        self.tex = Text(M1, height=5, width=25)
+        self.tex.grid(row=4, column=1, columnspan=2, padx=(20,20),pady=(5,5))
 
         CamProp = Button(M1 , text = "Adjust Camera Properties", command = self.CameraAdjust)
         CamProp.grid(row=5,column=1,columnspan=2, padx=(20,20),pady=(10,5))
@@ -47,7 +47,7 @@ class App:
 
         ###############################
         #Apps Menu
-        AppsM = Frame(gboard, bd = "1px",width= "200px", height= "135px")
+        AppsM = Frame(gboard, bd = "2px",width= "240px", height= "135px")
         M2 = LabelFrame(AppsM,text="Apps")
         M2.pack(fill="both",expand="yes")
         AppsM.pack_propagate(0)
@@ -55,10 +55,10 @@ class App:
 
         #Buttons in Apps
         Test = Button(M2, text = "Test", command = self.Testmark, width=9, height=2)
-        Test.grid(row=1,padx=(80,20),pady=(20,20))
+        Test.grid(row=1,padx=(90,20),pady=(20,20))
 
         Draw = Button(M2, text = "Draw", command = self.Draw, width=9, height=2)
-        Draw.grid(row=2,padx=(80,20),pady=(15,15))
+        Draw.grid(row=2,padx=(90,20),pady=(15,15))
 
 
 
@@ -122,9 +122,11 @@ class App:
 
     def MarkerAdd(self):
         os.system('python AddMarker.py')
+        self.tex.delete("1.0", END)
 
     def MarkerEd(self):
         os.system('python EdMarker.py')
+        self.tex.delete("1.0", END)
 
     def StartRec(self):
         os.system('python StartRec.py')
@@ -133,7 +135,17 @@ class App:
         os.system('python StopRec.py')
 
     def ShowMar(self):
-        os.system('python ShowMar.py')
+        # os.system('python ShowMar.py')
+        for i in range(4):
+            marker_file = "./markers/marker" + str(i+1) + ".txt"
+            if os.path.exists(marker_file):
+                info =  "Marker " + str(i+1) + " Added\n"
+                self.tex.insert(END, info)
+            else:
+                info = "Marker "+ str(i+1) + " Not Added\n"
+                self.tex.insert(END, info)
+
+        # self.tex.delete("1.0", END)
 
     def CameraAdjust(self):
         os.system('python CameraAdjust.py')
@@ -144,17 +156,6 @@ class App:
     def Draw(self):
         os.system('python Draw.py')
 
-    def EditMark1(self):
-        os.system('python EditMark1.py')
-
-    def EditMark2(self):
-        os.system('python EditMark2.py')
-
-    def EditMark3(self):
-        os.system('python EditMark3.py')
-
-    def EditMark4(self):
-        os.system('python EditMark4.py')
 
 
 class CaptureVideo:
@@ -192,7 +193,7 @@ gboard.update_idletasks()
 width = 1000
 height = 500
 
-gboard.geometry("{}x{}+20+20".format(width,height))
+gboard.geometry("{}x{}+250+100".format(width,height))
 gboard.resizable(0,0)
 
 app = App(gboard)

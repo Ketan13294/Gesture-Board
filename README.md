@@ -1,5 +1,6 @@
 # Gesture-Board
-Software Development for portable development project
+Software Development for portable Devices project
 
-code in python 2.7
-RUN - python Main_Win.py
+@Authors
+Prakhar Satpute
+Kapi Ketan Mehta

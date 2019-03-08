@@ -2,6 +2,7 @@ from Tkinter import *
 from functools import partial
 import PIL
 import cv2
+import os
 from PIL import ImageTk, Image
 
 
@@ -70,14 +71,20 @@ class EdMarker:
         print "Replace marker ", id
 
     def DeleteMarker(self, id):
-        print "Delete marker ", id
+
+        file_path = "./markers/marker" + str(id) + ".txt"
+        if(os.path.exists(file_path)):
+            os.remove(file_path)
+        else:
+            print "Marker not added !, File DNE"
+        # print "Delete marker ", id
 
 Edmark=Tk()
 
 edMarker = EdMarker(Edmark)
 
 Edmark.title("Edit Markers")
-Edmark.geometry("700x650")
+Edmark.geometry("700x650+400+60")
 Edmark.resizable(0,0)
 
 Edmark.mainloop()
