@@ -29,10 +29,10 @@ class App:
         EditM = Button(M1, text = "Edit Marker", command = self.MarkerEd)
         EditM.grid(row=1,column=2,padx=(20,20),pady=(12,12))
 
-        StartRec = Button(M1, text = "Start Record", command = self.StartRec)
+        StartRec = Button(M1, text = "Start Tracking", command = self.StartTrack)
         StartRec.grid(row=2,column=1,padx=(20,20),pady=(12,12))
 
-        StopRec =Button(M1 , text = "Stop Record", command = self.StopRec)
+        StopRec =Button(M1 , text = "Stop Tracking", command = self.StopTrack)
         StopRec.grid(row=2,column=2,padx=(20,20),pady=(12,12))
 
         ShowMark =Button(M1 , text = "Show Markers", command = self.ShowMar)
@@ -95,12 +95,17 @@ class App:
     def takeSnapshot(self):
 
        #Delay for 3 seconds
-       # self.delaySnapshot(3)
-       # Get a frame from the video source
-       # i = 0;
-       # for i in range(90000000):
-       #      continue;
-       ret, frame = self.vid.get_frame()
+
+       mil = 3000
+       while mil>0 :
+           ret, frame = self.vid.get_frame()
+
+           mil = mil-30
+           # cv2.imshow("f", frame)
+           if cv2.waitKey(10) & 0xFF == ord('q'):
+               #this method holds execution for 10 milliseconds, which is why we
+               #reduce millis by 10
+               break
 
        # Saves the snapshot into snapshots folder in current directory
        if ret:
@@ -128,14 +133,15 @@ class App:
         os.system('python EdMarker.py')
         self.tex.delete("1.0", END)
 
-    def StartRec(self):
-        os.system('python StartRec.py')
+    def StartTrack(self):
+        os.system('python StartTrack.py')
 
-    def StopRec(self):
-        os.system('python StopRec.py')
+    def StopTrack(self):
+        os.system('python StopTrack.py')
 
     def ShowMar(self):
         # os.system('python ShowMar.py')
+        # For evry marker file, check if exists, then display in text field
         for i in range(4):
             marker_file = "./markers/marker" + str(i+1) + ".txt"
             if os.path.exists(marker_file):
@@ -173,8 +179,17 @@ class CaptureVideo:
         if self.vid.isOpened():
             ret, frame = self.vid.read()
             if ret:
+                # cv2.imshow("M3", frame)
+                # k = cv2.waitKey(1)
+                #
+                # if k%256 == 27:
+                #     #ESC pressed, dont Save the image
+                #     break
+                # elif k%256 == 32:
+                #     # SPACE pressed
                 # Return a boolean success flag and the current frame converted to BGR
                 return (ret, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+
             else:
                 return (ret, None)
         else:
