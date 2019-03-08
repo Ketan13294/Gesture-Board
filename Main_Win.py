@@ -58,7 +58,7 @@ class App:
         Test.grid(row=1,padx=(80,20),pady=(20,20))
 
         Draw = Button(M2, text = "Draw", command = self.Draw, width=9, height=2)
-        Draw.grid(row=6,column=2,padx=(13,13),pady=(15,15))
+        Draw.grid(row=2,padx=(80,20),pady=(15,15))
 
 
 
@@ -119,6 +119,9 @@ class App:
 
        self.M3.after(self.delay, self.update)
 
+
+    def MarkerAdd(self):
+        os.system('python AddMarker.py')
 
     def MarkerEd(self):
         os.system('python EdMarker.py')
@@ -181,9 +184,6 @@ class CaptureVideo:
         if self.vid.isOpened():
             self.vid.release()
 
-
-def MarkerAdd():
-    os.system('python AddMarker.py')
 
 gboard=Tk()
 
