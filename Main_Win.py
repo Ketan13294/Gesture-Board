@@ -14,8 +14,9 @@ class App:
 
         #################
         #Frame Main Menu
-        MainM = Frame(master, bd = "1px", relief="raised",width= "300px", height= "250px")
-        M1 = LabelFrame(MainM,text="Main Menu", width= "1000px", height= "250px")
+        MainM = Frame(master, bd = "1px",width= "200px", height= "240px")
+        M1 = LabelFrame(MainM,text="Main Menu")
+        # , width= "800px", height= "200px"
         # MainM.grid(row=0, column=0, columnspan=2)
         M1.pack(fill="both",expand="yes")
         MainM.pack_propagate(0)
@@ -23,61 +24,62 @@ class App:
 
         # Buttons in Main Menu
         AddM = Button(M1, text = "Add Marker", command = self.MarkerAdd)
-        AddM.grid(row=1,column=1,padx=(10,10))
+        AddM.grid(row=1,column=1,padx=(20,20))
 
         EditM = Button(M1, text = "Edit Marker", command = self.MarkerEd)
-        EditM.grid(row=1,column=2,padx=(10,10),pady=(12,12))
+        EditM.grid(row=1,column=2,padx=(20,20),pady=(12,12))
 
         StartRec = Button(M1, text = "Start Record", command = self.StartRec)
-        StartRec.grid(row=2,column=1,padx=(10,10),pady=(12,12))
+        StartRec.grid(row=2,column=1,padx=(20,20),pady=(12,12))
 
         StopRec =Button(M1 , text = "Stop Record", command = self.StopRec)
-        StopRec.grid(row=2,column=2,padx=(10,10),pady=(12,12))
+        StopRec.grid(row=2,column=2,padx=(20,20),pady=(12,12))
 
         ShowMark =Button(M1 , text = "Show Markers", command = self.ShowMar)
-        ShowMark.grid(row=3,column=1,padx=(10,10),pady=(12,12))
+        ShowMark.grid(row=3,column=1,padx=(20,20),pady=(12,12))
 
         tex = Text(M1, height=5, width=25)
-        tex.grid(row=4, column=1, columnspan=20, padx=(10,10),pady=(5,5))
+        tex.grid(row=4, column=1, columnspan=20, padx=(20,20),pady=(5,5))
 
         CamProp = Button(M1 , text = "Adjust Camera Properties", command = self.CameraAdjust)
-        CamProp.grid(row=5,column=1,columnspan=2, padx=(10,10),pady=(10,5))
+        CamProp.grid(row=5,column=1,columnspan=2, padx=(20,20),pady=(10,5))
 
 
         ###############################
         #Apps Menu
-        AppsM = Frame(gboard, bd = "5px", relief="raised",width= "300px", height= "200px")
+        AppsM = Frame(gboard, bd = "1px",width= "200px", height= "135px")
         M2 = LabelFrame(AppsM,text="Apps")
         M2.pack(fill="both",expand="yes")
         AppsM.pack_propagate(0)
-        AppsM.place(x=0,y=330)
+        AppsM.place(x=0,y=319)
 
         #Buttons in Apps
         Test = Button(M2, text = "Test", command = self.Testmark, width=9, height=2)
-        Test.grid(row=6,column=1,padx=(12,12),pady=(15,15))
+        Test.grid(row=1,padx=(80,20),pady=(20,20))
 
         Draw = Button(M2, text = "Draw", command = self.Draw, width=9, height=2)
-        Draw.grid(row=6,column=2,padx=(13,13),pady=(15,15))
+        Draw.grid(row=2,padx=(80,20),pady=(20,20))
 
-        Marker1 = Button(M2, text = "Edit Marker 1", command = self.EditMark1,width=9, height=2)
-        Marker1.grid(row=7,column=1,padx=(12,12),pady=(15,15))
-
-        Marker2 = Button(M2, text = "Edit Marker 2", command = self.EditMark2,width=9, height=2)
-        Marker2.grid(row=7,column=2,padx=(13,13),pady=(15,15))
-
-        Marker3 = Button(M2, text = "Edit Marker 3", command = self.EditMark3,width=9, height=2)
-        Marker3.grid(row=8,column=1,padx=(12,12),pady=(15,15))
-
-        Marker4 = Button(M2, text = "Edit Marker 4", command = self.EditMark4,width=9, height=2)
-        Marker4.grid(row=8,column=2,padx=(13,13),pady=(15,15))
+        # Marker1 = Button(M2, text = "Edit Marker 1", command = self.EditMark1,width=9, height=2)
+        # Marker1.grid(row=7,column=1,padx=(12,12),pady=(15,15))
+        #
+        # Marker2 = Button(M2, text = "Edit Marker 2", command = self.EditMark2,width=9, height=2)
+        # Marker2.grid(row=7,column=2,padx=(13,13),pady=(15,15))
+        #
+        # Marker3 = Button(M2, text = "Edit Marker 3", command = self.EditMark3,width=9, height=2)
+        # Marker3.grid(row=8,column=1,padx=(12,12),pady=(15,15))
+        #
+        # Marker4 = Button(M2, text = "Edit Marker 4", command = self.EditMark4,width=9, height=2)
+        # Marker4.grid(row=8,column=2,padx=(13,13),pady=(15,15))
 
         ########################################
         #Camera frame
-        self.CamF = Frame(gboard, bd = "5px", relief="raised",width= "390px", height= "450px")
+        self.CamF = Frame(gboard, bd = "5px", relief="raised",width= "500px", height= "450px")
         self.M3 = LabelFrame(self.CamF,text="Camera Feed")
         self.M3.pack(fill="both",expand=True, anchor=E)
         self.CamF.pack_propagate(0)
-        self.CamF.place(x=280,y=0)
+        # self.CamF.place(x=350,y=0)
+        self.CamF.pack(anchor=E)
 
         # open video source (by default this will try to open the computer webcam)
         self.vid = CaptureVideo(self.video_source)
@@ -194,12 +196,11 @@ gboard=Tk()
 
 gboard.title("Gesture Board Controls")
 gboard.update_idletasks()
-width = 800
-height = 600
+width = 1000
+height = 500
 
 gboard.geometry("{}x{}+20+20".format(width,height))
-
-# gboard.resizable(0,0)
+gboard.resizable(0,0)
 
 app = App(gboard)
 
