@@ -14,67 +14,68 @@ class App:
 
         #################
         #Frame Main Menu
-        MainM = Frame(master, bd = "5px", relief="raised",width= "200px", height= "250px")
-        M1 = LabelFrame(MainM,text="Main Menu")
+        MainM = Frame(master, bd = "1px", relief="raised",width= "300px", height= "250px")
+        M1 = LabelFrame(MainM,text="Main Menu", width= "1000px", height= "250px")
+        # MainM.grid(row=0, column=0, columnspan=2)
         M1.pack(fill="both",expand="yes")
         MainM.pack_propagate(0)
         MainM.place(anchor="nw")
 
         # Buttons in Main Menu
         AddM = Button(M1, text = "Add Marker", command = self.MarkerAdd)
-        AddM.grid(row=1,column=1,padx=(20,20))
+        AddM.grid(row=1,column=1,padx=(10,10))
 
         EditM = Button(M1, text = "Edit Marker", command = self.MarkerEd)
-        EditM.grid(row=1,column=2,padx=(20,20),pady=(12,12))
+        EditM.grid(row=1,column=2,padx=(10,10),pady=(12,12))
 
         StartRec = Button(M1, text = "Start Record", command = self.StartRec)
-        StartRec.grid(row=2,column=1,padx=(20,20),pady=(12,12))
+        StartRec.grid(row=2,column=1,padx=(10,10),pady=(12,12))
 
         StopRec =Button(M1 , text = "Stop Record", command = self.StopRec)
-        StopRec.grid(row=2,column=2,padx=(20,20),pady=(12,12))
+        StopRec.grid(row=2,column=2,padx=(10,10),pady=(12,12))
 
         ShowMark =Button(M1 , text = "Show Markers", command = self.ShowMar)
-        ShowMark.grid(row=3,column=1,padx=(20,20),pady=(12,12))
+        ShowMark.grid(row=3,column=1,padx=(10,10),pady=(12,12))
 
         tex = Text(M1, height=5, width=25)
-        tex.grid(row=4, column=1, columnspan=20, padx=(20,20),pady=(5,5))
+        tex.grid(row=4, column=1, columnspan=20, padx=(10,10),pady=(5,5))
 
         CamProp = Button(M1 , text = "Adjust Camera Properties", command = self.CameraAdjust)
-        CamProp.grid(row=5,column=1,columnspan=2, padx=(20,20),pady=(10,5))
+        CamProp.grid(row=5,column=1,columnspan=2, padx=(10,10),pady=(10,5))
 
 
         ###############################
         #Apps Menu
-        AppsM = Frame(gboard, bd = "5px", relief="raised",width= "200px", height= "200px")
+        AppsM = Frame(gboard, bd = "5px", relief="raised",width= "300px", height= "200px")
         M2 = LabelFrame(AppsM,text="Apps")
         M2.pack(fill="both",expand="yes")
         AppsM.pack_propagate(0)
         AppsM.place(x=0,y=330)
 
         #Buttons in Apps
-        Test = Button(M2, text = "Test", command = self.Testmark, width=10, height=2)
-        Test.grid(row=6,column=1,padx=(20,20),pady=(20,20))
+        Test = Button(M2, text = "Test", command = self.Testmark, width=9, height=2)
+        Test.grid(row=6,column=1,padx=(12,12),pady=(15,15))
 
-        Draw = Button(M2, text = "Draw", command = self.Draw, width=10, height=2)
-        Draw.grid(row=6,column=2,padx=(20,20),pady=(20,20))
+        Draw = Button(M2, text = "Draw", command = self.Draw, width=9, height=2)
+        Draw.grid(row=6,column=2,padx=(13,13),pady=(15,15))
 
-        Marker1 = Button(M2, text = "Edit Marker 1", command = self.EditMark1, height=2)
-        Marker1.grid(row=7,column=1,padx=(20,20),pady=(20,20))
+        Marker1 = Button(M2, text = "Edit Marker 1", command = self.EditMark1,width=9, height=2)
+        Marker1.grid(row=7,column=1,padx=(12,12),pady=(15,15))
 
-        Marker2 = Button(M2, text = "Edit Marker 2", command = self.EditMark2, height=2)
-        Marker2.grid(row=7,column=2,padx=(20,20),pady=(20,20))
+        Marker2 = Button(M2, text = "Edit Marker 2", command = self.EditMark2,width=9, height=2)
+        Marker2.grid(row=7,column=2,padx=(13,13),pady=(15,15))
 
-        Marker3 = Button(M2, text = "Edit Marker 3", command = self.EditMark3, height=2)
-        Marker3.grid(row=8,column=1,padx=(20,20),pady=(20,20))
+        Marker3 = Button(M2, text = "Edit Marker 3", command = self.EditMark3,width=9, height=2)
+        Marker3.grid(row=8,column=1,padx=(12,12),pady=(15,15))
 
-        Marker4 = Button(M2, text = "Edit Marker 4", command = self.EditMark4, height=2)
-        Marker4.grid(row=8,column=2,padx=(20,20),pady=(20,20))
+        Marker4 = Button(M2, text = "Edit Marker 4", command = self.EditMark4,width=9, height=2)
+        Marker4.grid(row=8,column=2,padx=(13,13),pady=(15,15))
 
         ########################################
         #Camera frame
         self.CamF = Frame(gboard, bd = "5px", relief="raised",width= "390px", height= "450px")
-        M3 = LabelFrame(self.CamF,text="Camera Feed")
-        M3.pack(fill="both",expand=True, anchor=E)
+        self.M3 = LabelFrame(self.CamF,text="Camera Feed")
+        self.M3.pack(fill="both",expand=True, anchor=E)
         self.CamF.pack_propagate(0)
         self.CamF.place(x=280,y=0)
 
@@ -82,21 +83,31 @@ class App:
         self.vid = CaptureVideo(self.video_source)
 
         # Create a canvas that can fit the above video source size
-        self.canvas = Tkinter.Canvas(self.CamF, width = self.vid.width, height = self.vid.height)
+        self.canvas = Tkinter.Canvas(self.M3, width = self.vid.width, height = self.vid.height)
         self.canvas.pack()
 
         # Button that lets the user take a snapshot
         # self.btn_snapshot=Tkinter.Button(master, text="Snapshot", width=50, command=self.takeSnapshot)
         # self.btn_snapshot.pack(anchor=Tkinter.CENTER, expand=True)
         self.btn_snapshot =Button(M1 , text = "Take Snapshot", command = self.takeSnapshot)
-        self.btn_snapshot.grid(row=3,column=2,padx=(20,20),pady=(12,12))
+        self.btn_snapshot.grid(row=3,column=2,padx=(15,15),pady=(12,12))
 
         # After it is called once, the update method will be automatically called every delay milliseconds
         self.delay = 15
         self.update()
 
+    def delaySnapshot(self, t_sec):
+        self.t_sec = t_sec
+        self.M3.after(1000*self.t_sec)
+
     def takeSnapshot(self):
+
+       #Delay for 3 seconds
+       # self.delaySnapshot(3)
        # Get a frame from the video source
+       i = 0;
+       for i in range(9000000):
+            continue;
        ret, frame = self.vid.get_frame()
 
        # Saves the snapshot into snapshots folder in current directory
@@ -113,7 +124,7 @@ class App:
            self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
            self.canvas.create_image(0, 0, image = self.photo, anchor = Tkinter.NW)
 
-       self.CamF.after(self.delay, self.update)
+       self.M3.after(self.delay, self.update)
 
     def MarkerAdd():
         os.system('python AddMarker.py')
@@ -182,8 +193,13 @@ class CaptureVideo:
 gboard=Tk()
 
 gboard.title("Gesture Board Controls")
-gboard.geometry("1000x600")
-gboard.resizable(0,0)
+gboard.update_idletasks()
+width = 800
+height = 600
+
+gboard.geometry("{}x{}+20+20".format(width,height))
+
+# gboard.resizable(0,0)
 
 app = App(gboard)
 
