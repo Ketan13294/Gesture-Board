@@ -58,19 +58,9 @@ class App:
         Test.grid(row=1,padx=(80,20),pady=(20,20))
 
         Draw = Button(M2, text = "Draw", command = self.Draw, width=9, height=2)
-        Draw.grid(row=2,padx=(80,20),pady=(20,20))
+        Draw.grid(row=6,column=2,padx=(13,13),pady=(15,15))
 
-        # Marker1 = Button(M2, text = "Edit Marker 1", command = self.EditMark1,width=9, height=2)
-        # Marker1.grid(row=7,column=1,padx=(12,12),pady=(15,15))
-        #
-        # Marker2 = Button(M2, text = "Edit Marker 2", command = self.EditMark2,width=9, height=2)
-        # Marker2.grid(row=7,column=2,padx=(13,13),pady=(15,15))
-        #
-        # Marker3 = Button(M2, text = "Edit Marker 3", command = self.EditMark3,width=9, height=2)
-        # Marker3.grid(row=8,column=1,padx=(12,12),pady=(15,15))
-        #
-        # Marker4 = Button(M2, text = "Edit Marker 4", command = self.EditMark4,width=9, height=2)
-        # Marker4.grid(row=8,column=2,padx=(13,13),pady=(15,15))
+
 
         ########################################
         #Camera frame
@@ -107,15 +97,16 @@ class App:
        #Delay for 3 seconds
        # self.delaySnapshot(3)
        # Get a frame from the video source
-       i = 0;
-       for i in range(9000000):
-            continue;
+       # i = 0;
+       # for i in range(90000000):
+       #      continue;
        ret, frame = self.vid.get_frame()
 
        # Saves the snapshot into snapshots folder in current directory
        if ret:
            path = "./snapshots/"
-           img_filename = "frame-" + time.strftime("%d-%m-%Y@%H:%M:%S") + ".jpg"
+           # img_filename = "frame-" + time.strftime("%d-%m-%Y@%H:%M:%S") + ".jpg"
+           img_filename = "snap.jpg"
            cv2.imwrite(os.path.join(path,img_filename), cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
 
     def update(self):
@@ -128,40 +119,38 @@ class App:
 
        self.M3.after(self.delay, self.update)
 
-    def MarkerAdd():
-        os.system('python AddMarker.py')
 
-    def MarkerEd():
+    def MarkerEd(self):
         os.system('python EdMarker.py')
 
-    def StartRec():
+    def StartRec(self):
         os.system('python StartRec.py')
 
-    def StopRec():
+    def StopRec(self):
         os.system('python StopRec.py')
 
-    def ShowMar():
+    def ShowMar(self):
         os.system('python ShowMar.py')
 
-    def CameraAdjust():
+    def CameraAdjust(self):
         os.system('python CameraAdjust.py')
 
-    def Testmark():
+    def Testmark(self):
         os.system('python Testmark.py')
 
-    def Draw():
+    def Draw(self):
         os.system('python Draw.py')
 
-    def EditMark1():
+    def EditMark1(self):
         os.system('python EditMark1.py')
 
-    def EditMark2():
+    def EditMark2(self):
         os.system('python EditMark2.py')
 
-    def EditMark3():
+    def EditMark3(self):
         os.system('python EditMark3.py')
 
-    def EditMark4():
+    def EditMark4(self):
         os.system('python EditMark4.py')
 
 
@@ -191,6 +180,10 @@ class CaptureVideo:
     def __del__(self):
         if self.vid.isOpened():
             self.vid.release()
+
+
+def MarkerAdd():
+    os.system('python AddMarker.py')
 
 gboard=Tk()
 
