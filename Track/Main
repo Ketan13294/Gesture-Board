@@ -6,8 +6,11 @@ import time
 from pymouse import PyMouse
 colors = np.zeros((4,2,3))
 total_rectangle=4
-hand_rect_one_x = None
+l=0
+a = 0
+b = 0
 hand_rect_one_y = None
+hand_rect_one_x = None
 hand_rect_two_x = None
 hand_rect_two_y = None
 
@@ -28,13 +31,24 @@ kernelOpen = np.ones((4,4))
 kernelClose = np.ones((25,25))
 
 def mouse_track(mse,x,y):
-    size = mse.screen_size();
-    size1 = np.array([640,480])
-    x = int((x/640)*size[0])
-    y = int((y/480)*size[1])
-    mse.move(x,y);
-
-
+    global l,a,b
+    if l == 2:
+        a = a + x
+        b = b + y
+        x = int(a/l)
+        y = int(b/l)
+        l=0
+        a=0
+        b=0
+        size = mse.screen_size();
+        size1 = np.array([640,480])
+        x = int((x/1024)*size[0])
+        y = int((y/768)*size[1])
+        mse.move(x,y);
+    else :
+        a = a + x
+        b = b + y
+        l = l + 1
 
 #extract the camera feed
 vdcpt = cv2.VideoCapture(0)
@@ -45,7 +59,7 @@ while True :
 
     # extract colors from the images
     ret,img = vdcpt.read();     #read frame from video stream
-    img = cv2.resize(img,(640,480))     #resizing as it is easier to work on a standard size
+    img = cv2.resize(img,(1024,768))     #resizing as it is easier to work on a standard size
     img=cv2.flip(img,1)
     imgHSV = cv2.GaussianBlur(img, (11, 11), 0)
     imgHSV = cv2.cvtColor(imgHSV,cv2.COLOR_BGR2HSV)
@@ -90,7 +104,7 @@ while True :
             cv2.circle(img,center,5,(0,0,255),-1)
 
 
-    # cv2.imshow("cam",img)
+    cv2.imshow("cam",img)
     key = cv2.waitKey(10)
     if key == ord("e"):
         break
