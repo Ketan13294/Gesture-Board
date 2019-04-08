@@ -5,6 +5,19 @@ import os
 import cv2
 import PIL.Image, PIL.ImageTk
 import time
+import numpy as np
+import PIL
+import imutils
+from pymouse import PyMouse
+from pynput.keyboard import Key, Controller
+import threading
+
+keyboard = Controller()
+l = 0   # average counter
+a = 0   # mean x variable
+b = 0   # mean y variable
+active = "y"
+t1=0
 
 class App:
 
@@ -134,10 +147,173 @@ class App:
         self.tex.delete("1.0", END)
 
     def StartTrack(self):
-        os.system('python StartTrack.py')
+        global active
+        #print(active)
+        active = "y"
+        def StTrack():
+            # os.system('python StartTrack.py')
+            global active
+            hand_rect_one_y = None  # lower corner y coordinate
+            hand_rect_one_x = None  # lower corner x coordinate
+            hand_rect_two_x = None  # Upper corner x coordinate
+            hand_rect_two_y = None  # Upper corner y coordinate
+            ###############Colour Ranges##############
+            # RED color limits
+            LowR = np.array([136,87,111]);
+            UpR = np.array([180,255,255]);
+
+            # Blue Cot1lor Limits
+            LowB = np.array([33,80,40]);
+            UpB = np.array([102,255,255]);
+
+            # Green Color Limits
+            LowG = np.array([22,60,6]);
+            UpG = np.array([60,255,255]);
+
+            # Yellow Color Limits
+            LowY = np.array([58,40,38]);
+            UpY = np.array([58,255,155]);
+
+            # morphology kernels
+            kernelOpen = np.ones((4,4))
+            kernelClose = np.ones((25,25))
+
+            #######mouse tracking function#########
+            def mouse_track(mse,x,y):
+                global l,a,b
+                if l == 2:
+                    a = a + x
+                    b = b + y
+                    x = int(a/l)
+                    y = int(b/l)
+                    l = 0
+                    a = 0
+                    b = 0
+                    size = mse.screen_size();
+                    size1 = np.array([640,480])
+                    x = int((x/1024)*size[0])
+                    y = int((y/768)*size[1])
+                    mse.move(x,y);
+                else :
+                    a = a + x
+                    b = b + y
+                    l = l + 1
+
+
+
+
+            #extract the camera feed
+            # vdcpt = cv2.VideoCapture(0)
+            time.sleep(1)
+            mse = PyMouse()
+            #print("Press e to exit....")
+
+            while True :
+
+                # extract colors from the images
+                ret,img = self.vid.get_frame();     #read frame from video stream
+                img = cv2.resize(img,(1024,768))     #resizing as it is easier to work on a standard size
+                # img=cv2.flip(img,1)
+                imgHSV = cv2.GaussianBlur(img, (11, 11), 0)
+                imgHSV = cv2.cvtColor(imgHSV,cv2.COLOR_BGR2HSV)
+                mask = cv2.inRange(imgHSV,LowG,UpG)     #create a mask for red color in the range specified
+
+                #morphology
+                imgerode = cv2.erode(mask,None,iterations=2)
+                imgdilate = cv2.dilate(imgerode,None,iterations=2)
+                imgfinal = imgdilate
+
+                cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+                cont = imutils.grab_contours(cont)
+
+                if len(cont)>0 :
+
+                    cont = max(cont, key=cv2.contourArea)
+                    ((x, y), radius) = cv2.minEnclosingCircle(cont)
+                    M = cv2.moments(cont)
+                    center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
+                    if radius > 15 :
+                        cv2.circle(img,(int(x),int(y)),int(radius),(0,255,0),2)
+                        cv2.circle(img,center,5,(0,255,0,-1))
+                        mouse_track(mse,int(x),int(y))
+
+                mask1 = cv2.inRange(imgHSV,LowR,UpR)     #create a mask for red color in the range specified
+
+                #morphology
+                imgerode = cv2.erode(mask1,None,iterations=2)
+                imgdilate = cv2.dilate(imgerode,None,iterations=2)
+                imgfinal = imgdilate
+
+                cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+                cont = imutils.grab_contours(cont)
+
+                if len(cont)>0 :
+                    cont = max(cont, key=cv2.contourArea)
+                    ((x, y), radius) = cv2.minEnclosingCircle(cont)
+                    M = cv2.moments(cont)
+                    center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
+                    if radius > 22 :
+                        cv2.circle(img,(int(x),int(y)),int(radius),(255,0,0),2)
+                        cv2.circle(img,center,5,(255,0,0),-1)
+
+                mask2 = cv2.inRange(imgHSV,LowB,UpB)     #create a mask for red color in the range specified
+
+                #morphology
+                imgerode = cv2.erode(mask2,None,iterations=2)
+                imgdilate = cv2.dilate(imgerode,None,iterations=2)
+                imgfinal = imgdilate
+
+                cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+                cont = imutils.grab_contours(cont)
+
+                if len(cont)>0 :
+                    cont = max(cont, key=cv2.contourArea)
+                    ((x, y), radius) = cv2.minEnclosingCircle(cont)
+                    M = cv2.moments(cont)
+                    center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
+                    if radius > 22 :
+                        cv2.circle(img,(int(x),int(y)),int(radius),(0,0,255),2)
+                        cv2.circle(img,center,5,(0,0,255),-1)
+
+                mask3 = cv2.inRange(imgHSV,LowY,UpY)     #create a mask for red color in the range specified
+
+                #morphology
+                imgerode = cv2.erode(mask3,None,iterations=2)
+                imgdilate = cv2.dilate(imgerode,None,iterations=2)
+                imgfinal = imgdilate
+
+                cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+                cont = imutils.grab_contours(cont)
+
+                if len(cont)>0 :
+                    cont = max(cont, key=cv2.contourArea)
+                    ((x, y), radius) = cv2.minEnclosingCircle(cont)
+                    M = cv2.moments(cont)
+                    center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
+                    if radius > 22 :
+                        cv2.circle(img,(int(x),int(y)),int(radius),(255,255,0),2)
+                        cv2.circle(img,center,5,(255,255,0),-1)
+
+                cv2.imshow("cam",img)
+                key = cv2.waitKey(10)
+                if key == ord("e") or active == "n":
+                    #print(active,"waitKey")
+                    active = "y"
+                    break
+
+
+        global t1
+        t1 = threading.Thread(target=StTrack)
+        t1.start()
 
     def StopTrack(self):
-        os.system('python StopTrack.py')
+        # os.system('python StopTrack.py')
+        global active
+        global t1
+        keyboard.press('e')
+        keyboard.release('e')
+        active = "n"
+        t1.join();
 
     def ShowMar(self):
         # os.system('python ShowMar.py')
@@ -188,6 +364,7 @@ class CaptureVideo:
                 # elif k%256 == 32:
                 #     # SPACE pressed
                 # Return a boolean success flag and the current frame converted to BGR
+                frame = cv2.flip(frame,1)
                 return (ret, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
             else:
@@ -214,40 +391,3 @@ gboard.resizable(0,0)
 app = App(gboard)
 
 gboard.mainloop()
-
-
-
-
-
-
-
-
-
-# SixthSense = Tk()
-# SixthSense.title("Gesture Board")
-# SixthSense.geometry("800x600")
-# SixthSense.resizable(0,0)
-#
-# SixthSense.option_add("*Button.Background", "black")
-# SixthSense.option_add("*Button.Foreground", "red")
-# SixthSense.option_add("*Button.Foreground", "whop")op# frame1 = Frame(SixthSense, width=200,height=300)
-# Label(frame1, text = 'Main Menu', width=200, height=20,bg='white', fg='black').pack(side="left")
-# frame1.pack_propagate(0)
-# frame1.pack(anchor="nw")
-#
-# #Buttons and Boxes in Main Menu
-# AddM = Button(frame1, text="Add Marker",bg="red",fg="black").pack()
-#
-#
-# frame2 = Frame(SixthSense,width=200,height=300)
-# Label(frame2, text = 'Apps', width=200, height=20,bg='red', fg='white').pack(side="left")
-# frame2.pack_propagate(0)
-# frame2.pack(anchor="sw")
-#
-# #Buttons and Boxes in Apps
-#
-# frame3 = Frame(SixthSense, width = 600, height = 600)
-# Label(frame3, text = "Camera Input", bg = 'black', fg='red').pack(side="top")
-# frame3.pack(anchor="e")
-#
-# SixthSense.mainloop()
