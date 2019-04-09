@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import Tkinter
 from Tkinter import *
+from functools import partial
 import os
 import cv2
 import PIL.Image, PIL.ImageTk
@@ -16,8 +17,7 @@ keyboard = Controller()
 l = 0   # average counter
 a = 0   # mean x variable
 b = 0   # mean y variable
-active = "y"
-t1=0
+active = "n"
 
 class App:
 
@@ -67,11 +67,12 @@ class App:
         AppsM.place(x=0,y=319)
 
         #Buttons in Apps
-        Test = Button(M2, text = "Test", command = self.Testmark, width=9, height=2)
-        Test.grid(row=1,padx=(90,20),pady=(20,20))
+        Quit = Button(M2, text = "Quit", command = partial(self.QuitApp, master), width=9, height=2)
+        Quit.grid(row=1,padx=(90,20),pady=(20,20))
 
-        Draw = Button(M2, text = "Draw", command = self.Draw, width=9, height=2)
-        Draw.grid(row=2,padx=(90,20),pady=(15,15))
+
+        # Draw = Button(M2, text = "Draw", command = self.Draw, width=9, height=2)
+        # Draw.grid(row=2,padx=(90,20),pady=(15,15))
 
 
 
@@ -105,6 +106,8 @@ class App:
         self.t_sec = t_sec
         self.M3.after(1000*self.t_sec)
 
+    # Take snapshot in between live camera feed. The video stream pauses for a moment
+    # Snapshot is saved in the snapshots folder, replaces the old snapshot.
     def takeSnapshot(self):
 
        #Delay for 3 seconds
@@ -123,10 +126,10 @@ class App:
        # Saves the snapshot into snapshots folder in current directory
        if ret:
            path = "./snapshots/"
-           # img_filename = "frame-" + time.strftime("%d-%m-%Y@%H:%M:%S") + ".jpg"
            img_filename = "snap.jpg"
            cv2.imwrite(os.path.join(path,img_filename), cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
 
+    # Update video feed as new frame received
     def update(self):
        # Get a frame from the video source
        ret, frame = self.vid.get_frame()
@@ -146,10 +149,19 @@ class App:
         os.system('python EdMarker.py')
         self.tex.delete("1.0", END)
 
+    # Intitiates with input of a frame from the videostream object,
+    # masks the unwanted region using the color HSV ranges. After the
+    # required region has been found out, largest contour of the particular
+    # color is selected and center of area is found out using moment of area
+    # which then is highlighted by circular markers. The coordinates of the
+    # center of contours is used to scale on the screen size which is then
+    # used to move the mouse to the scaled coordinates
+    #
     def StartTrack(self):
         global active
         #print(active)
         active = "y"
+        # Function which is called when the thread is initiated
         def StTrack():
             # os.system('python StartTrack.py')
             global active
@@ -179,6 +191,9 @@ class App:
             kernelClose = np.ones((25,25))
 
             #######mouse tracking function#########
+            # the function calculates the coordinates of the center of contour
+            # and then scales it to the screen and moves the mouse pointer to
+            # the calculated coordinates.
             def mouse_track(mse,x,y):
                 global l,a,b
                 if l == 2:
@@ -294,7 +309,7 @@ class App:
                         cv2.circle(img,(int(x),int(y)),int(radius),(255,255,0),2)
                         cv2.circle(img,center,5,(255,255,0),-1)
 
-                cv2.imshow("cam",img)
+                # cv2.imshow("cam",img)
                 key = cv2.waitKey(10)
                 if key == ord("e") or active == "n":
                     #print(active,"waitKey")
@@ -306,6 +321,8 @@ class App:
         t1 = threading.Thread(target=StTrack)
         t1.start()
 
+    # The stop function changes the flag of tracking function to break the
+    # tracking function out of the infinite loop and exit the tracking script.
     def StopTrack(self):
         # os.system('python StopTrack.py')
         global active
@@ -329,18 +346,29 @@ class App:
 
         # self.tex.delete("1.0", END)
 
+
     def CameraAdjust(self):
         os.system('python CameraAdjust.py')
 
     def Testmark(self):
         os.system('python Testmark.py')
 
+    # Quit App, Before that terminate thread adn release resources
+    def QuitApp(self, master):
+        # t1.join()
+        if active == "y":
+            self.StopTrack()
+        cv2.destroyAllWindows()
+        master.destroy()
+
     def Draw(self):
         os.system('python Draw.py')
 
 
-
+# Class with functions to capture video from the webcam
+# get stream frame by frame to perform operations on each frame.
 class CaptureVideo:
+
     def __init__(self, video_source=0):
     # Open the video source
         self.vid = cv2.VideoCapture(video_source)
@@ -378,6 +406,7 @@ class CaptureVideo:
             self.vid.release()
 
 
+# Main window props
 gboard=Tk()
 
 gboard.title("Gesture Board Controls")

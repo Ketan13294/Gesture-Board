@@ -1,37 +1,38 @@
 # organize imports
+# -*- coding: utf-8 -*-
+
 import cv2
 import imutils
 import numpy as np
 from sklearn.metrics import pairwise
+# import pyautogui
+
 
 # global variables
 bg = None
 
-#-------------------------------------------------------------------------------
-# Function - To find the running average over the background
-#-------------------------------------------------------------------------------
-def run_avg(image, accumWeight):
+# This function finds the running average between background and curr frame
+# accumulateWeighted has inbuilt formula -> dst(x,y)=(1−a).dst(x,y)+a.src(x,y)
+# with a as accumWeight
+def run_avg(frame, a):
     global bg
-    # initialize the background
+
     if bg is None:
-        bg = image.copy().astype("float")
+        bg = frame.copy().astype("float")
         return
 
     # compute weighted average, accumulate it and update the background
-    cv2.accumulateWeighted(image, bg, accumWeight)
+    cv2.accumulateWeighted(frame, bg, a)
 
-#-------------------------------------------------------------------------------
-# Function - To segment the region of hand in the image
-#-------------------------------------------------------------------------------
+# Finds diffrence between background and current frame and then separates the foreground as white
+# and background as black, Find contours and and the contour with the largest area is our hand,
+# it is returned
 def segment(image, threshold=25):
     global bg
-    # find the absolute difference between background and current frame
     diff = cv2.absdiff(bg.astype("uint8"), image)
 
-    # threshold the diff image so that we get the foreground
     thresholded = cv2.threshold(diff, threshold, 255, cv2.THRESH_BINARY)[1]
 
-    # get the contours in the thresholded image
     (cnts, _) = cv2.findContours(thresholded.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     # return None, if no contours detected
@@ -42,46 +43,36 @@ def segment(image, threshold=25):
         segmented = max(cnts, key=cv2.contourArea)
         return (thresholded, segmented)
 
-#-------------------------------------------------------------------------------
-# Function - To count the number of fingers in the segmented hand region
-#-------------------------------------------------------------------------------
+# Find convex hull of segmented hand. Then find the extreme left, right, top, bottom points to find
+# the centre of the hand, little less than maximium distance from centre to extreme points is taken as radius,
+# to cover all fingers. A circle is formed which when masked with thresholded value gives cuts used to find number of fingers
 def count(thresholded, segmented):
-	# find the convex hull of the segmented hand region
 	chull = cv2.convexHull(segmented)
 
-	# find the most extreme points in the convex hull
 	extreme_top    = tuple(chull[chull[:, :, 1].argmin()][0])
 	extreme_bottom = tuple(chull[chull[:, :, 1].argmax()][0])
 	extreme_left   = tuple(chull[chull[:, :, 0].argmin()][0])
 	extreme_right  = tuple(chull[chull[:, :, 0].argmax()][0])
 
-	# find the center of the palm
-	cX = (extreme_left[0] + extreme_right[0]) / 2
-	cY = (extreme_top[1] + extreme_bottom[1]) / 2
+    # centre adjusted to account for thumb
+	cX = int(extreme_left[0]*0.45 + extreme_right[0]*0.55)
+	cY = int(extreme_top[1]*0.3 + extreme_bottom[1]*0.7)
 
-	# find the maximum euclidean distance between the center of the palm
-	# and the most extreme points of the convex hull
+
 	distance = pairwise.euclidean_distances([(cX, cY)], Y=[extreme_left, extreme_right, extreme_top, extreme_bottom])[0]
 	maximum_distance = distance[distance.argmax()]
 
 	# calculate the radius of the circle with 80% of the max euclidean distance obtained
 	radius = int(0.8 * maximum_distance)
 
-	# find the circumference of the circle
 	circumference = (2 * np.pi * radius)
 
-	# take out the circular region of interest which has
-	# the palm and the fingers
 	circular_roi = np.zeros(thresholded.shape[:2], dtype="uint8")
 
-	# draw the circular ROI
 	cv2.circle(circular_roi, (cX, cY), radius, 255, 1)
 
-	# take bit-wise AND between thresholded hand using the circular ROI as the mask
-	# which gives the cuts obtained using mask on the thresholded hand image
 	circular_roi = cv2.bitwise_and(thresholded, thresholded, mask=circular_roi)
 
-	# compute the contours in the circular ROI
 	(cnts, _) = cv2.findContours(circular_roi.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
 	# initalize the finger count
@@ -89,26 +80,45 @@ def count(thresholded, segmented):
 
 	# loop through the contours found
 	for c in cnts:
-		# compute the bounding box of the contour
 		(x, y, w, h) = cv2.boundingRect(c)
 
 		# increment the count of fingers only if -
 		# 1. The contour region is not the wrist (bottom area)
 		# 2. The number of points along the contour does not exceed
-		#     25% of the circumference of the circular ROI
-		if ((cY + (cY * 0.25)) > (y + h)) and ((circumference * 0.25) > c.shape[0]):
+		#     10% of the circumference of the circular ROI
+		if ((cY + (cY * 0.20)) > (y + h)) and ((circumference * 0.10) > c.shape[0]):
 			count += 1
 
 	return count
+
+# Funtion used for callibrating the weighted average model, first 15 frames are used for callibrating with background
+# After callibration any movement is captured as white in thres window
+def calibrate(gray, accumWeight, num_frames):
+    run_avg(gray, accumWeight)
+    if num_frames == 1:
+        print "[STATUS] please wait! calibrating..."
+    elif num_frames == 14:
+        print "[STATUS] calibration successfull..."
+    num_frames += 1
+
+def takeSnapshot():
+    # im1 = pyautogui.screenshot()
+    # im1.save('my_screenshot.png')
+    return
+
+# Exit App
+def exitApp():
+    # free up memory
+    camera.release()
+    cv2.destroyAllWindows()
 
 #-------------------------------------------------------------------------------
 # Main function
 #-------------------------------------------------------------------------------
 if __name__ == "__main__":
-    # initialize accumulated weight
     accumWeight = 0.5
 
-    # get the reference to the webcam
+    #Webcam
     camera = cv2.VideoCapture(0)
 
     # region of interest (ROI) coordinates
@@ -117,52 +127,36 @@ if __name__ == "__main__":
     # initialize num of frames
     num_frames = 0
 
-    # calibration indicator
     calibrated = False
 
-    # keep looping, until interrupted
     while(True):
-        # get the current frame
         (grabbed, frame) = camera.read()
 
-        # resize the frame
         frame = imutils.resize(frame, width=700)
 
-        # flip the frame so that it is not the mirror view
+        #Take mirror image
         frame = cv2.flip(frame, 1)
 
-        # clone the frame
         clone = frame.copy()
 
-        # get the height and width of the frame
         (height, width) = frame.shape[:2]
 
-        # get the ROI
         roi = frame[top:bottom, right:left]
 
         # convert the roi to grayscale and blur it
         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
         gray = cv2.GaussianBlur(gray, (7, 7), 0)
 
-        # to get the background, keep looking till a threshold is reached
-        # so that our weighted average model gets calibrated
-        if num_frames < 30:
-            run_avg(gray, accumWeight)
-            if num_frames == 1:
-            	print "[STATUS] please wait! calibrating..."
-            elif num_frames == 29:
-				print "[STATUS] calibration successfull..."
+
+        if num_frames < 15:
+            calibrate(gray, accumWeight, num_frames)
         else:
             # segment the hand region
             hand = segment(gray)
 
             # check whether hand region is segmented
             if hand is not None:
-                # if yes, unpack the thresholded image and
-                # segmented region
                 (thresholded, segmented) = hand
-
-                # draw the segmented region and display the frame
                 cv2.drawContours(clone, [segmented + (right, top)], -1, (0, 0, 255))
 
                 # count the number of fingers
@@ -170,10 +164,17 @@ if __name__ == "__main__":
 
                 cv2.putText(clone, str(fingers), (70, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
 
+                # # print "Fingers = ", fingers
+                if fingers == 0 and num_frames > 100:
+                    print "Exiting Application.."
+                    break
+                if fingers == 2:
+                    takeSnapshot()
                 # show the thresholded image
-                cv2.imshow("Thesholded", thresholded)
+                winname = "Thresholded"
+                cv2.imshow(winname, thresholded)
+                cv2.moveWindow(winname, 900, 100)
 
-        # draw the segmented hand
         cv2.rectangle(clone, (left, top), (right, bottom), (0,255,0), 2)
 
         # increment the number of frames
@@ -182,13 +183,10 @@ if __name__ == "__main__":
         # display the frame with segmented hand
         cv2.imshow("Video Feed", clone)
 
-        # observe the keypress by the user
         keypress = cv2.waitKey(1) & 0xFF
 
         # if the user pressed "q", then stop looping
         if keypress == ord("q"):
             break
 
-# free up memory
-camera.release()
-cv2.destroyAllWindows()
+exitApp()
