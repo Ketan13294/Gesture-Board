@@ -214,8 +214,28 @@ class App:
                     b = b + y
                     l = l + 1
 
+            ### Masks the specified colour and draws contours around the masked object
+            ### Also draws a min area enclosing circle around the masked portion 
+            def maskColour(imgHSV, low, high, colHSV):
+                mask1 = cv2.inRange(imgHSV,low,high)
 
+                #morphology
+                imgerode = cv2.erode(mask1,None,iterations=2)
+                imgdilate = cv2.dilate(imgerode,None,iterations=2)
+                imgfinal = imgdilate
 
+                cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+                cont = imutils.grab_contours(cont)
+
+                if len(cont)>0 :
+                    cont = max(cont, key=cv2.contourArea)
+                    ((x, y), radius) = cv2.minEnclosingCircle(cont)
+                    M = cv2.moments(cont)
+                    center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
+                    if radius > 22 :
+                        cv2.circle(img,(int(x),int(y)),int(radius),colHSV,2)
+                        cv2.circle(img,center,5,colHSV,-1)
+                return mask
 
             #extract the camera feed
             # vdcpt = cv2.VideoCapture(0)
@@ -231,7 +251,11 @@ class App:
                 # img=cv2.flip(img,1)
                 imgHSV = cv2.GaussianBlur(img, (11, 11), 0)
                 imgHSV = cv2.cvtColor(imgHSV,cv2.COLOR_BGR2HSV)
-                mask = cv2.inRange(imgHSV,LowG,UpG)     #create a mask for red color in the range specified
+
+                ########################################################
+                # create a mask for Green color in the range specified #
+                ########################################################
+                mask = cv2.inRange(imgHSV,LowG,UpG)
 
                 #morphology
                 imgerode = cv2.erode(mask,None,iterations=2)
@@ -252,62 +276,14 @@ class App:
                         cv2.circle(img,center,5,(0,255,0,-1))
                         mouse_track(mse,int(x),int(y))
 
-                mask1 = cv2.inRange(imgHSV,LowR,UpR)     #create a mask for red color in the range specified
+                # create a mask for Red color in the range specified #
+                maskG = maskColour(imgHSV, LowR, UpR, (255,0,0))
 
-                #morphology
-                imgerode = cv2.erode(mask1,None,iterations=2)
-                imgdilate = cv2.dilate(imgerode,None,iterations=2)
-                imgfinal = imgdilate
+                # create a mask for Blue color in the range specified #
+                maskB = maskColour(imgHSV,LowB,UpB, (0,0,255))
 
-                cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-                cont = imutils.grab_contours(cont)
-
-                if len(cont)>0 :
-                    cont = max(cont, key=cv2.contourArea)
-                    ((x, y), radius) = cv2.minEnclosingCircle(cont)
-                    M = cv2.moments(cont)
-                    center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
-                    if radius > 22 :
-                        cv2.circle(img,(int(x),int(y)),int(radius),(255,0,0),2)
-                        cv2.circle(img,center,5,(255,0,0),-1)
-
-                mask2 = cv2.inRange(imgHSV,LowB,UpB)     #create a mask for red color in the range specified
-
-                #morphology
-                imgerode = cv2.erode(mask2,None,iterations=2)
-                imgdilate = cv2.dilate(imgerode,None,iterations=2)
-                imgfinal = imgdilate
-
-                cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-                cont = imutils.grab_contours(cont)
-
-                if len(cont)>0 :
-                    cont = max(cont, key=cv2.contourArea)
-                    ((x, y), radius) = cv2.minEnclosingCircle(cont)
-                    M = cv2.moments(cont)
-                    center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
-                    if radius > 22 :
-                        cv2.circle(img,(int(x),int(y)),int(radius),(0,0,255),2)
-                        cv2.circle(img,center,5,(0,0,255),-1)
-
-                mask3 = cv2.inRange(imgHSV,LowY,UpY)     #create a mask for red color in the range specified
-
-                #morphology
-                imgerode = cv2.erode(mask3,None,iterations=2)
-                imgdilate = cv2.dilate(imgerode,None,iterations=2)
-                imgfinal = imgdilate
-
-                cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-                cont = imutils.grab_contours(cont)
-
-                if len(cont)>0 :
-                    cont = max(cont, key=cv2.contourArea)
-                    ((x, y), radius) = cv2.minEnclosingCircle(cont)
-                    M = cv2.moments(cont)
-                    center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
-                    if radius > 22 :
-                        cv2.circle(img,(int(x),int(y)),int(radius),(255,255,0),2)
-                        cv2.circle(img,center,5,(255,255,0),-1)
+                # create a mask for Yellow color in the range specified #
+                maskY = maskColour(imgHSV,LowY,UpY, (255,255,0))
 
                 # cv2.imshow("cam",img)
                 key = cv2.waitKey(10)
