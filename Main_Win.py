@@ -1,6 +1,6 @@
 #!/usr/bin/python
-import Tkinter
-from Tkinter import *
+import tkinter
+from tkinter import *
 from functools import partial
 import os
 import cv2
@@ -89,12 +89,12 @@ class App:
         self.vid = CaptureVideo(self.video_source)
 
         # Create a canvas that can fit the above video source size
-        self.canvas = Tkinter.Canvas(self.M3, width = self.vid.width, height = self.vid.height)
+        self.canvas = tkinter.Canvas(self.M3, width = self.vid.width, height = self.vid.height)
         self.canvas.pack()
 
         # Button that lets the user take a snapshot
-        # self.btn_snapshot=Tkinter.Button(master, text="Snapshot", width=50, command=self.takeSnapshot)
-        # self.btn_snapshot.pack(anchor=Tkinter.CENTER, expand=True)
+        # self.btn_snapshot=tkinter.Button(master, text="Snapshot", width=50, command=self.takeSnapshot)
+        # self.btn_snapshot.pack(anchor=tkinter.CENTER, expand=True)
         self.btn_snapshot =Button(M1 , text = "Take Snapshot", command = self.takeSnapshot)
         self.btn_snapshot.grid(row=3,column=2,padx=(15,15),pady=(12,12))
 
@@ -136,7 +136,7 @@ class App:
 
        if ret:
            self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
-           self.canvas.create_image(0, 0, image = self.photo, anchor = Tkinter.NW)
+           self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
 
        self.M3.after(self.delay, self.update)
 

@@ -96,9 +96,9 @@ def count(thresholded, segmented):
 def calibrate(gray, accumWeight, num_frames):
     run_avg(gray, accumWeight)
     if num_frames == 1:
-        print "[STATUS] please wait! calibrating..."
+        print ("[STATUS] please wait! calibrating...")
     elif num_frames == 14:
-        print "[STATUS] calibration successfull..."
+        print ("[STATUS] calibration successfull...")
     num_frames += 1
 
 def takeSnapshot():
@@ -166,7 +166,7 @@ if __name__ == "__main__":
 
                 # # print "Fingers = ", fingers
                 if fingers == 0 and num_frames > 100:
-                    print "Exiting Application.."
+                    print ("Exiting Application..")
                     break
                 if fingers == 2:
                     takeSnapshot()
