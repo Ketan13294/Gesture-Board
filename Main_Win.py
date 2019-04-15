@@ -227,7 +227,9 @@ class App:
 
                 # extract colors from the images
                 ret,img = self.vid.get_frame();     #read frame from video stream
+                img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
                 img = cv2.resize(img,(1024,768))     #resizing as it is easier to work on a standard size
+
                 # img=cv2.flip(img,1)
                 imgHSV = cv2.GaussianBlur(img, (11, 11), 0)
                 imgHSV = cv2.cvtColor(imgHSV,cv2.COLOR_BGR2HSV)

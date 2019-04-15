@@ -1,4 +1,4 @@
-from Tkinter import *
+from tkinter import *
 from functools import partial
 import PIL
 import cv2
@@ -68,7 +68,7 @@ class EdMarker:
 
 
     def ReplaceMarker(self, id):
-        print "Replace marker ", id
+        print ("Replace marker ", id)
 
     def DeleteMarker(self, id):
 
@@ -76,7 +76,7 @@ class EdMarker:
         if(os.path.exists(file_path)):
             os.remove(file_path)
         else:
-            print "Marker not added !, File DNE"
+            print ("Marker not added !, File DNE")
         # print "Delete marker ", id
 
 Edmark=Tk()
