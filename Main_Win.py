@@ -18,6 +18,11 @@ l = 0   # average counter
 a = 0   # mean x variable
 b = 0   # mean y variable
 active = "n"
+t1 = None
+hand_hist1=[]
+hand_hist2= []
+hand_hist3=[]
+hand_hist4=[]
 
 class App:
 
@@ -69,11 +74,6 @@ class App:
         #Buttons in Apps
         Quit = Button(M2, text = "Quit", command = partial(self.QuitApp, master), width=9, height=2)
         Quit.grid(row=1,padx=(90,20),pady=(20,20))
-
-
-        # Draw = Button(M2, text = "Draw", command = self.Draw, width=9, height=2)
-        # Draw.grid(row=2,padx=(90,20),pady=(15,15))
-
 
 
         ########################################
@@ -157,43 +157,65 @@ class App:
     # center of contours is used to scale on the screen size which is then
     # used to move the mouse to the scaled coordinates
     #
+
+    def col_extract (self):
+        global hand_hist1,hand_hist2,hand_hist3,hand_hist4
+        path1="./markers/marker1.jpg"
+        path2="./markers/marker2.jpg"
+        path3="./markers/marker3.jpg"
+        path4="./markers/marker4.jpg"
+
+        if(os.path.isfile(path1)):
+            frame1 = cv2.imread(path1);
+            # cv2.imshow()
+            hsv1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2HSV)
+            hand_hist1=cv2.calcHist([hsv1],[0,1],None,[256, 256],[0, 255, 0, 255])
+            cv2.normalize(hand_hist1, hand_hist1, 0, 255, cv2.NORM_MINMAX)
+
+        if(os.path.isfile(path2)):
+            frame1 = cv2.imread(path2);
+            # cv2.imshow()
+            hsv1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2HSV)
+            hand_hist2=cv2.calcHist([hsv1],[0],None,[256],[0, 256])
+            cv2.normalize(hand_hist2, hand_hist2, 0, 255, cv2.NORM_MINMAX)
+        if(os.path.isfile(path3)):
+            frame1 = cv2.imread(path3);
+            # cv2.imshow()
+            hsv1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2HSV)
+            hand_hist3=cv2.calcHist([hsv1],[1,2],None,[256,256],[ 0, 256, 0, 256])
+            cv2.normalize(hand_hist3, hand_hist3, 0, 255, cv2.NORM_MINMAX)
+        if(os.path.isfile(path4)):
+            frame1 = cv2.imread(path4);
+            # cv2.imshow()
+            hsv1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2HSV)
+            hand_hist4=cv2.calcHist([hsv1],[2],None,[256],[0, 256])
+            cv2.normalize(hand_hist4, hand_hist4, 0, 255, cv2.NORM_MINMAX)
+
+
     def StartTrack(self):
         global active
         #print(active)
         active = "y"
+        self.col_extract()
         # Function which is called when the thread is initiated
         def StTrack():
             # os.system('python StartTrack.py')
-            global active
+            global active,hand_hist1,hand_hist2,hand_hist3,hand_hist4
             hand_rect_one_y = None  # lower corner y coordinate
             hand_rect_one_x = None  # lower corner x coordinate
             hand_rect_two_x = None  # Upper corner x coordinate
             hand_rect_two_y = None  # Upper corner y coordinate
-            ###############Colour Ranges##############
-            # RED color limits
-            LowR = np.array([136,87,111]);
-            UpR = np.array([180,255,255]);
-
-            # Blue Cot1lor Limits
-            LowB = np.array([33,80,40]);
-            UpB = np.array([102,255,255]);
-
-            # Green Color Limits
-            LowG = np.array([22,60,6]);
-            UpG = np.array([60,255,255]);
-
-            # Yellow Color Limits
-            LowY = np.array([58,40,38]);
-            UpY = np.array([58,255,155]);
 
             # morphology kernels
-            kernelOpen = np.ones((4,4))
-            kernelClose = np.ones((25,25))
+            kernel = np.ones((5,5))
+
 
             #######mouse tracking function#########
             # the function calculates the coordinates of the center of contour
             # and then scales it to the screen and moves the mouse pointer to
             # the calculated coordinates.
+
+
             def mouse_track(mse,x,y):
                 global l,a,b
                 if l == 2:
@@ -230,86 +252,92 @@ class App:
                 img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
                 img = cv2.resize(img,(1024,768))     #resizing as it is easier to work on a standard size
 
-                # img=cv2.flip(img,1)
-                imgHSV = cv2.GaussianBlur(img, (11, 11), 0)
-                imgHSV = cv2.cvtColor(imgHSV,cv2.COLOR_BGR2HSV)
-                mask = cv2.inRange(imgHSV,LowG,UpG)     #create a mask for red color in the range specified
+                hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+                dst = cv2.calcBackProject([hsv], [0,1], hand_hist1, [0,256,0,256], 1)
+                disc = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+                cv2.filter2D(dst, -1, disc, dst)
+                ret, thresh = cv2.threshold(dst,100, 255, cv2.THRESH_BINARY)
+                thresh = cv2.merge((thresh, thresh, thresh))
+                img2 = cv2.bitwise_and(img, thresh)
+                img2 = cv2.erode(img2, kernel, iterations=1)
+                img2 = cv2.dilate(img2, kernel, iterations=1)
+                img2 = cv2.dilate(img2, kernel, iterations=1)
+                img2 = cv2.erode(img2, kernel, iterations=1)
 
-                #morphology
-                imgerode = cv2.erode(mask,None,iterations=2)
-                imgdilate = cv2.dilate(imgerode,None,iterations=2)
-                imgfinal = imgdilate
-
-                cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-                cont = imutils.grab_contours(cont)
-
+                gray_hist_mask_image = cv2.cvtColor(img2, cv2.COLOR_RGB2GRAY)
+                ret, thresh = cv2.threshold(gray_hist_mask_image, 0, 255, 0)
+                cont, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                cv2.drawContours(img, cont, -1, (0,255,0), 3)
+                cv2.imshow("bitwise",img)
+                cv2.waitKey(1)
                 if len(cont)>0 :
 
                     cont = max(cont, key=cv2.contourArea)
+
                     ((x, y), radius) = cv2.minEnclosingCircle(cont)
                     M = cv2.moments(cont)
                     center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
-                    if radius > 15 :
+                    if radius > 10 :
                         cv2.circle(img,(int(x),int(y)),int(radius),(0,255,0),2)
                         cv2.circle(img,center,5,(0,255,0,-1))
                         mouse_track(mse,int(x),int(y))
 
-                mask1 = cv2.inRange(imgHSV,LowR,UpR)     #create a mask for red color in the range specified
-
-                #morphology
-                imgerode = cv2.erode(mask1,None,iterations=2)
-                imgdilate = cv2.dilate(imgerode,None,iterations=2)
-                imgfinal = imgdilate
-
-                cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-                cont = imutils.grab_contours(cont)
-
-                if len(cont)>0 :
-                    cont = max(cont, key=cv2.contourArea)
-                    ((x, y), radius) = cv2.minEnclosingCircle(cont)
-                    M = cv2.moments(cont)
-                    center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
-                    if radius > 22 :
-                        cv2.circle(img,(int(x),int(y)),int(radius),(255,0,0),2)
-                        cv2.circle(img,center,5,(255,0,0),-1)
-
-                mask2 = cv2.inRange(imgHSV,LowB,UpB)     #create a mask for red color in the range specified
-
-                #morphology
-                imgerode = cv2.erode(mask2,None,iterations=2)
-                imgdilate = cv2.dilate(imgerode,None,iterations=2)
-                imgfinal = imgdilate
-
-                cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-                cont = imutils.grab_contours(cont)
-
-                if len(cont)>0 :
-                    cont = max(cont, key=cv2.contourArea)
-                    ((x, y), radius) = cv2.minEnclosingCircle(cont)
-                    M = cv2.moments(cont)
-                    center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
-                    if radius > 22 :
-                        cv2.circle(img,(int(x),int(y)),int(radius),(0,0,255),2)
-                        cv2.circle(img,center,5,(0,0,255),-1)
-
-                mask3 = cv2.inRange(imgHSV,LowY,UpY)     #create a mask for red color in the range specified
-
-                #morphology
-                imgerode = cv2.erode(mask3,None,iterations=2)
-                imgdilate = cv2.dilate(imgerode,None,iterations=2)
-                imgfinal = imgdilate
-
-                cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-                cont = imutils.grab_contours(cont)
-
-                if len(cont)>0 :
-                    cont = max(cont, key=cv2.contourArea)
-                    ((x, y), radius) = cv2.minEnclosingCircle(cont)
-                    M = cv2.moments(cont)
-                    center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
-                    if radius > 22 :
-                        cv2.circle(img,(int(x),int(y)),int(radius),(255,255,0),2)
-                        cv2.circle(img,center,5,(255,255,0),-1)
+                # mask1 = cv2.inRange(imgHSV,LowR,UpR)     #create a mask for red color in the range specified
+                #
+                # #morphology
+                # imgerode = cv2.erode(mask1,None,iterations=2)
+                # imgdilate = cv2.dilate(imgerode,None,iterations=2)
+                # imgfinal = imgdilate
+                #
+                # cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+                # cont = imutils.grab_contours(cont)
+                #
+                # if len(cont)>0 :
+                #     cont = max(cont, key=cv2.contourArea)
+                #     ((x, y), radius) = cv2.minEnclosingCircle(cont)
+                #     M = cv2.moments(cont)
+                #     center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
+                #     if radius > 22 :
+                #         cv2.circle(img,(int(x),int(y)),int(radius),(255,0,0),2)
+                #         cv2.circle(img,center,5,(255,0,0),-1)
+                #
+                # mask2 = cv2.inRange(imgHSV,LowB,UpB)     #create a mask for red color in the range specified
+                # cv2.imshow("mask",mask2)
+                # #morphology
+                # imgerode = cv2.erode(mask2,None,iterations=2)
+                # imgdilate = cv2.dilate(imgerode,None,iterations=2)
+                # imgfinal = imgdilate
+                #
+                # cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+                # cont = imutils.grab_contours(cont)
+                #
+                # if len(cont)>0 :
+                #     cont = max(cont, key=cv2.contourArea)
+                #     ((x, y), radius) = cv2.minEnclosingCircle(cont)
+                #     M = cv2.moments(cont)
+                #     center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
+                #     if radius > 22 :
+                #         cv2.circle(img,(int(x),int(y)),int(radius),(0,0,255),2)
+                #         cv2.circle(img,center,5,(0,0,255),-1)
+                #
+                # mask3 = cv2.inRange(imgHSV,LowY,UpY)     #create a mask for red color in the range specified
+                #
+                # #morphology
+                # imgerode = cv2.erode(mask3,None,iterations=2)
+                # imgdilate = cv2.dilate(imgerode,None,iterations=2)
+                # imgfinal = imgdilate
+                #
+                # cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+                # cont = imutils.grab_contours(cont)
+                #
+                # if len(cont)>0 :
+                #     cont = max(cont, key=cv2.contourArea)
+                #     ((x, y), radius) = cv2.minEnclosingCircle(cont)
+                #     M = cv2.moments(cont)
+                #     center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
+                #     if radius > 22 :
+                #         cv2.circle(img,(int(x),int(y)),int(radius),(255,255,0),2)
+                #         cv2.circle(img,center,5,(255,255,0),-1)
 
                 # cv2.imshow("cam",img)
                 key = cv2.waitKey(10)
@@ -317,8 +345,6 @@ class App:
                     #print(active,"waitKey")
                     active = "y"
                     break
-
-
         global t1
         t1 = threading.Thread(target=StTrack)
         t1.start()
