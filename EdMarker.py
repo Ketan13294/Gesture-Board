@@ -1,4 +1,4 @@
-from Tkinter import *
+from tkinter import *
 from functools import partial
 import PIL
 import cv2
@@ -26,23 +26,15 @@ class EdMarker:
 
 
         ## Buttons Edit Marker ##
-        replaceM1 = Button(M1, text = "Replace", command = partial(self.ReplaceMarker, 1) ,width=9, height=2)
-        replaceM1.grid(row=0,column=0,padx=(12,12),pady=(7,7))
         deleteM1 = Button(M1, text = "Delete", command = partial(self.DeleteMarker, 1),width=9, height=2)
         deleteM1.grid(row=1,column=0,padx=(12,12),pady=(7,7))
 
-        replaceM2 = Button(M2, text = "Replace", command = partial(self.ReplaceMarker, 2),width=9, height=2)
-        replaceM2.grid(row=0,column=1,padx=(13,13),pady=(7,7))
         deleteM2 = Button(M2, text = "Delete", command = partial(self.DeleteMarker, 2),width=9, height=2)
         deleteM2.grid(row=1,column=1,padx=(12,12),pady=(7,7))
 
-        replaceM3 = Button(M3, text = "Replace", command = partial(self.ReplaceMarker, 3),width=9, height=2)
-        replaceM3.grid(row=0,column=2,padx=(12,12),pady=(7,7))
         deleteM3 = Button(M3, text = "Delete", command = partial(self.DeleteMarker, 3),width=9, height=2)
         deleteM3.grid(row=1,column=2,padx=(12,12),pady=(7,7))
 
-        replaceM4 = Button(M4, text = "Replace", command = partial(self.ReplaceMarker, 4),width=9, height=2)
-        replaceM4.grid(row=0,column=3,padx=(13,13),pady=(7,7))
         deleteM4 = Button(M4, text = "Delete", command = partial(self.DeleteMarker, 4),width=9, height=2)
         deleteM4.grid(row=1,column=3,padx=(12,12),pady=(7,7))
 
@@ -68,15 +60,15 @@ class EdMarker:
 
 
     def ReplaceMarker(self, id):
-        print "Replace marker ", id
+        print ("Replace marker ", id)
 
     def DeleteMarker(self, id):
 
-        file_path = "./markers/marker" + str(id) + ".txt"
+        file_path = "./markers/marker" + str(id) + ".jpg"
         if(os.path.exists(file_path)):
             os.remove(file_path)
         else:
-            print "Marker not added !, File DNE"
+            print ("Marker not added !, File DNE")
         # print "Delete marker ", id
 
 Edmark=Tk()
