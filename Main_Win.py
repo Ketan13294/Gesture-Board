@@ -9,71 +9,57 @@ import time
 import numpy as np
 import PIL
 import imutils
-from pymouse import PyMouse
-from pynput.keyboard import Key, Controller
+from pynput.keyboard import Key, Controller as KeyController
 import threading
+keyboard = KeyController()
 
-keyboard = Controller()
-l = 0   # average counter
-a = 0   # mean x variable
-b = 0   # mean y variable
+# mouse = Cont()
 active = "n"
-t1 = None
-hand_hist1=[]
-hand_hist2= []
-hand_hist3=[]
-hand_hist4=[]
+
 
 class App:
 
-    def __init__(self, master, video_source=0):
+    def __init__(self, master, video_source=1):
         self.master = master
         self.video_source = video_source
 
         #################
         #Frame Main Menu
-        MainM = Frame(master, bd = "1px",width= "240px", height= "240px")
+        MainM = Frame(master, bd = "1px",width= "200px", height= "360px")
         M1 = LabelFrame(MainM,text="Main Menu")
-        # , width= "800px", height= "200px"
-        # MainM.grid(row=0, column=0, columnspan=2)
         M1.pack(fill="both",expand="yes")
         MainM.pack_propagate(0)
         MainM.place(anchor="nw")
 
         # Buttons in Main Menu
-        AddM = Button(M1, text = "Add Marker", command = self.MarkerAdd)
-        AddM.grid(row=1,column=1,padx=(20,20))
-
-        EditM = Button(M1, text = "Edit Marker", command = self.MarkerEd)
-        EditM.grid(row=1,column=2,padx=(20,20),pady=(12,12))
+        # AddM = Button(M1, text = "Add Marker", command = self.MarkerAdd)
+        # AddM.grid(row=1,column=1)
+        #
+        # EditM = Button(M1, text = "Edit Marker", command = self.MarkerEd)
+        # EditM.grid(row=1,column=2,padx=(20,20),pady=(12,12))
 
         StartRec = Button(M1, text = "Start Tracking", command = self.StartTrack)
-        StartRec.grid(row=2,column=1,padx=(20,20),pady=(12,12))
+        StartRec.grid(row=2,column=1,padx=(10,10),pady=(12,12))
 
         StopRec =Button(M1 , text = "Stop Tracking", command = self.StopTrack)
-        StopRec.grid(row=2,column=2,padx=(20,20),pady=(12,12))
+        StopRec.grid(row=2,column=2,padx=(10,10),pady=(12,12))
+        #
+        # ShowMark =Button(M1 , text = "Show Markers", command = self.ShowMar)
+        # ShowMark.grid(row=3,column=1,padx=(20,20),pady=(12,12))
 
-        ShowMark =Button(M1 , text = "Show Markers", command = self.ShowMar)
-        ShowMark.grid(row=3,column=1,padx=(20,20),pady=(12,12))
+        # Button that lets the user take a snapshot
+        self.btn_snapshot =Button(M1 , text = "Take Snapshot", command = self.takeSnapshot)
+        self.btn_snapshot.grid(row=3,column=1,columnspan = 2,padx=(15,15),pady=(12,12))
 
         self.tex = Text(M1, height=5, width=25)
         self.tex.grid(row=4, column=1, columnspan=2, padx=(20,20),pady=(5,5))
 
-        CamProp = Button(M1 , text = "Adjust Camera Properties", command = self.CameraAdjust)
-        CamProp.grid(row=5,column=1,columnspan=2, padx=(20,20),pady=(10,5))
-
-
-        ###############################
-        #Apps Menu
-        AppsM = Frame(gboard, bd = "2px",width= "240px", height= "135px")
-        M2 = LabelFrame(AppsM,text="Apps")
-        M2.pack(fill="both",expand="yes")
-        AppsM.pack_propagate(0)
-        AppsM.place(x=0,y=319)
+        # CamProp = Button(M1 , text = "Adjust Camera Properties", command = self.CameraAdjust)
+        # CamProp.grid(row=5,column=1,columnspan=2, padx=(20,20),pady=(10,5))
 
         #Buttons in Apps
-        Quit = Button(M2, text = "Quit", command = partial(self.QuitApp, master), width=9, height=2)
-        Quit.grid(row=1,padx=(90,20),pady=(20,20))
+        Quit = Button(M1, text = "Quit", command = partial(self.QuitApp, master), width=9, height=2)
+        Quit.grid(row = 7, column = 1,columnspan = 2, padx=(20,20),pady = (12,12))
 
 
         ########################################
@@ -82,7 +68,6 @@ class App:
         self.M3 = LabelFrame(self.CamF,text="Camera Feed")
         self.M3.pack(fill="both",expand=True, anchor=E)
         self.CamF.pack_propagate(0)
-        # self.CamF.place(x=350,y=0)
         self.CamF.pack(anchor=E)
 
         # open video source (by default this will try to open the computer webcam)
@@ -91,12 +76,6 @@ class App:
         # Create a canvas that can fit the above video source size
         self.canvas = tkinter.Canvas(self.M3, width = self.vid.width, height = self.vid.height)
         self.canvas.pack()
-
-        # Button that lets the user take a snapshot
-        # self.btn_snapshot=tkinter.Button(master, text="Snapshot", width=50, command=self.takeSnapshot)
-        # self.btn_snapshot.pack(anchor=tkinter.CENTER, expand=True)
-        self.btn_snapshot =Button(M1 , text = "Take Snapshot", command = self.takeSnapshot)
-        self.btn_snapshot.grid(row=3,column=2,padx=(15,15),pady=(12,12))
 
         # After it is called once, the update method will be automatically called every delay milliseconds
         self.delay = 15
@@ -109,9 +88,7 @@ class App:
     # Take snapshot in between live camera feed. The video stream pauses for a moment
     # Snapshot is saved in the snapshots folder, replaces the old snapshot.
     def takeSnapshot(self):
-
-       #Delay for 3 seconds
-
+       # Delay for 3 seconds
        mil = 3000
        while mil>0 :
            ret, frame = self.vid.get_frame()
@@ -140,7 +117,8 @@ class App:
 
        self.M3.after(self.delay, self.update)
 
-
+########################################
+# Marker Addition
     def MarkerAdd(self):
         os.system('python AddMarker.py')
         self.tex.delete("1.0", END)
@@ -148,6 +126,7 @@ class App:
     def MarkerEd(self):
         os.system('python EdMarker.py')
         self.tex.delete("1.0", END)
+
 
     # Intitiates with input of a frame from the videostream object,
     # masks the unwanted region using the color HSV ranges. After the
@@ -157,214 +136,39 @@ class App:
     # center of contours is used to scale on the screen size which is then
     # used to move the mouse to the scaled coordinates
     #
-
-    def col_extract (self):
-        global hand_hist1,hand_hist2,hand_hist3,hand_hist4
-        path1="./markers/marker1.jpg"
-        path2="./markers/marker2.jpg"
-        path3="./markers/marker3.jpg"
-        path4="./markers/marker4.jpg"
-
-        if(os.path.isfile(path1)):
-            frame1 = cv2.imread(path1);
-            # cv2.imshow()
-            hsv1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2HSV)
-            hand_hist1=cv2.calcHist([hsv1],[0,1],None,[256, 256],[0, 255, 0, 255])
-            cv2.normalize(hand_hist1, hand_hist1, 0, 255, cv2.NORM_MINMAX)
-
-        if(os.path.isfile(path2)):
-            frame1 = cv2.imread(path2);
-            # cv2.imshow()
-            hsv1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2HSV)
-            hand_hist2=cv2.calcHist([hsv1],[0],None,[256],[0, 256])
-            cv2.normalize(hand_hist2, hand_hist2, 0, 255, cv2.NORM_MINMAX)
-        if(os.path.isfile(path3)):
-            frame1 = cv2.imread(path3);
-            # cv2.imshow()
-            hsv1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2HSV)
-            hand_hist3=cv2.calcHist([hsv1],[1,2],None,[256,256],[ 0, 256, 0, 256])
-            cv2.normalize(hand_hist3, hand_hist3, 0, 255, cv2.NORM_MINMAX)
-        if(os.path.isfile(path4)):
-            frame1 = cv2.imread(path4);
-            # cv2.imshow()
-            hsv1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2HSV)
-            hand_hist4=cv2.calcHist([hsv1],[2],None,[256],[0, 256])
-            cv2.normalize(hand_hist4, hand_hist4, 0, 255, cv2.NORM_MINMAX)
-
-
     def StartTrack(self):
-        global active
-        #print(active)
-        active = "y"
-        self.col_extract()
-        # Function which is called when the thread is initiated
-        def StTrack():
-            # os.system('python StartTrack.py')
-            global active,hand_hist1,hand_hist2,hand_hist3,hand_hist4
-            hand_rect_one_y = None  # lower corner y coordinate
-            hand_rect_one_x = None  # lower corner x coordinate
-            hand_rect_two_x = None  # Upper corner x coordinate
-            hand_rect_two_y = None  # Upper corner y coordinate
-
-            # morphology kernels
-            kernel = np.ones((5,5))
-
-
-            #######mouse tracking function#########
-            # the function calculates the coordinates of the center of contour
-            # and then scales it to the screen and moves the mouse pointer to
-            # the calculated coordinates.
-
-
-            def mouse_track(mse,x,y):
-                global l,a,b
-                if l == 2:
-                    a = a + x
-                    b = b + y
-                    x = int(a/l)
-                    y = int(b/l)
-                    l = 0
-                    a = 0
-                    b = 0
-                    size = mse.screen_size();
-                    size1 = np.array([640,480])
-                    x = int((x/1024)*size[0])
-                    y = int((y/768)*size[1])
-                    mse.move(x,y);
-                else :
-                    a = a + x
-                    b = b + y
-                    l = l + 1
-
-
-
-
-            #extract the camera feed
-            # vdcpt = cv2.VideoCapture(0)
-            time.sleep(1)
-            mse = PyMouse()
-            #print("Press e to exit....")
-
-            while True :
-
-                # extract colors from the images
-                ret,img = self.vid.get_frame();     #read frame from video stream
-                img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-                img = cv2.resize(img,(1024,768))     #resizing as it is easier to work on a standard size
-
-                hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-                dst = cv2.calcBackProject([hsv], [0,1], hand_hist1, [0,256,0,256], 1)
-                disc = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-                cv2.filter2D(dst, -1, disc, dst)
-                ret, thresh = cv2.threshold(dst,100, 255, cv2.THRESH_BINARY)
-                thresh = cv2.merge((thresh, thresh, thresh))
-                img2 = cv2.bitwise_and(img, thresh)
-                img2 = cv2.erode(img2, kernel, iterations=1)
-                img2 = cv2.dilate(img2, kernel, iterations=1)
-                img2 = cv2.dilate(img2, kernel, iterations=1)
-                img2 = cv2.erode(img2, kernel, iterations=1)
-
-                gray_hist_mask_image = cv2.cvtColor(img2, cv2.COLOR_RGB2GRAY)
-                ret, thresh = cv2.threshold(gray_hist_mask_image, 0, 255, 0)
-                cont, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-                cv2.drawContours(img, cont, -1, (0,255,0), 3)
-                cv2.imshow("bitwise",img)
-                cv2.waitKey(1)
-                if len(cont)>0 :
-
-                    cont = max(cont, key=cv2.contourArea)
-
-                    ((x, y), radius) = cv2.minEnclosingCircle(cont)
-                    M = cv2.moments(cont)
-                    center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
-                    if radius > 10 :
-                        cv2.circle(img,(int(x),int(y)),int(radius),(0,255,0),2)
-                        cv2.circle(img,center,5,(0,255,0,-1))
-                        mouse_track(mse,int(x),int(y))
-
-                # mask1 = cv2.inRange(imgHSV,LowR,UpR)     #create a mask for red color in the range specified
-                #
-                # #morphology
-                # imgerode = cv2.erode(mask1,None,iterations=2)
-                # imgdilate = cv2.dilate(imgerode,None,iterations=2)
-                # imgfinal = imgdilate
-                #
-                # cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-                # cont = imutils.grab_contours(cont)
-                #
-                # if len(cont)>0 :
-                #     cont = max(cont, key=cv2.contourArea)
-                #     ((x, y), radius) = cv2.minEnclosingCircle(cont)
-                #     M = cv2.moments(cont)
-                #     center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
-                #     if radius > 22 :
-                #         cv2.circle(img,(int(x),int(y)),int(radius),(255,0,0),2)
-                #         cv2.circle(img,center,5,(255,0,0),-1)
-                #
-                # mask2 = cv2.inRange(imgHSV,LowB,UpB)     #create a mask for red color in the range specified
-                # cv2.imshow("mask",mask2)
-                # #morphology
-                # imgerode = cv2.erode(mask2,None,iterations=2)
-                # imgdilate = cv2.dilate(imgerode,None,iterations=2)
-                # imgfinal = imgdilate
-                #
-                # cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-                # cont = imutils.grab_contours(cont)
-                #
-                # if len(cont)>0 :
-                #     cont = max(cont, key=cv2.contourArea)
-                #     ((x, y), radius) = cv2.minEnclosingCircle(cont)
-                #     M = cv2.moments(cont)
-                #     center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
-                #     if radius > 22 :
-                #         cv2.circle(img,(int(x),int(y)),int(radius),(0,0,255),2)
-                #         cv2.circle(img,center,5,(0,0,255),-1)
-                #
-                # mask3 = cv2.inRange(imgHSV,LowY,UpY)     #create a mask for red color in the range specified
-                #
-                # #morphology
-                # imgerode = cv2.erode(mask3,None,iterations=2)
-                # imgdilate = cv2.dilate(imgerode,None,iterations=2)
-                # imgfinal = imgdilate
-                #
-                # cont = cv2.findContours(imgfinal.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-                # cont = imutils.grab_contours(cont)
-                #
-                # if len(cont)>0 :
-                #     cont = max(cont, key=cv2.contourArea)
-                #     ((x, y), radius) = cv2.minEnclosingCircle(cont)
-                #     M = cv2.moments(cont)
-                #     center = (int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
-                #     if radius > 22 :
-                #         cv2.circle(img,(int(x),int(y)),int(radius),(255,255,0),2)
-                #         cv2.circle(img,center,5,(255,255,0),-1)
-
-                # cv2.imshow("cam",img)
-                key = cv2.waitKey(10)
-                if key == ord("e") or active == "n":
-                    #print(active,"waitKey")
-                    active = "y"
-                    break
         global t1
-        t1 = threading.Thread(target=StTrack)
+        def startt():
+            self.vid.__del__()
+            os.system('python StartTracking.py')
+
+        t1 = threading.Thread(target = startt)
         t1.start()
+
 
     # The stop function changes the flag of tracking function to break the
     # tracking function out of the infinite loop and exit the tracking script.
     def StopTrack(self):
         # os.system('python StopTrack.py')
-        global active
+        global active,keyboard
         global t1
-        keyboard.press('e')
-        keyboard.release('e')
+        print(self.vid.isOpen())
+        if self.vid.isOpen() == 0 :
+            # print(self.vid.isOpen())
+            self.vid = CaptureVideo(self.video_source)
+        keyboard.press('q')
+        keyboard.release('q')
+        t1.join()
         active = "n"
-        t1.join();
+        # t1.join();
+
+        # gesture_t.join()
 
     def ShowMar(self):
         # os.system('python ShowMar.py')
         # For evry marker file, check if exists, then display in text field
         for i in range(4):
-            marker_file = "./markers/marker" + str(i+1) + ".txt"
+            marker_file = "./markers/marker" + str(i+1) + ".jpg"
             if os.path.exists(marker_file):
                 info =  "Marker " + str(i+1) + " Added\n"
                 self.tex.insert(END, info)
@@ -372,14 +176,8 @@ class App:
                 info = "Marker "+ str(i+1) + " Not Added\n"
                 self.tex.insert(END, info)
 
-        # self.tex.delete("1.0", END)
-
-
     def CameraAdjust(self):
         os.system('python CameraAdjust.py')
-
-    def Testmark(self):
-        os.system('python Testmark.py')
 
     # Quit App, Before that terminate thread adn release resources
     def QuitApp(self, master):
@@ -389,15 +187,12 @@ class App:
         cv2.destroyAllWindows()
         master.destroy()
 
-    def Draw(self):
-        os.system('python Draw.py')
-
 
 # Class with functions to capture video from the webcam
 # get stream frame by frame to perform operations on each frame.
 class CaptureVideo:
 
-    def __init__(self, video_source=0):
+    def __init__(self, video_source):
     # Open the video source
         self.vid = cv2.VideoCapture(video_source)
         if not self.vid.isOpened():
@@ -407,19 +202,17 @@ class CaptureVideo:
         self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
+    def isOpen(self):
+         if not self.vid.isOpened():
+             return 0
+         else:
+             return 1
+
     def get_frame(self):
+        ret = False
         if self.vid.isOpened():
             ret, frame = self.vid.read()
             if ret:
-                # cv2.imshow("M3", frame)
-                # k = cv2.waitKey(1)
-                #
-                # if k%256 == 27:
-                #     #ESC pressed, dont Save the image
-                #     break
-                # elif k%256 == 32:
-                #     # SPACE pressed
-                # Return a boolean success flag and the current frame converted to BGR
                 frame = cv2.flip(frame,1)
                 return (ret, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 

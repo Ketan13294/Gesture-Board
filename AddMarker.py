@@ -6,7 +6,6 @@ mark_count=[]
 crop = False
 # crop_img = None
 def markcheck():
-
     exists = os.path.isfile('./markers/marker1.jpg')
     if exists:
         mark_count.append(1)
